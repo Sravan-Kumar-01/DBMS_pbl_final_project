@@ -22,7 +22,6 @@
     <form id="bookForm">
 
       <label>Service ID</label>
-      <!-- FIX ✅ Removed name="service_id" here -->
       <input type="text" id="serviceId" placeholder="Auto-filled" readonly required>
 
       <label>Your Name</label>
@@ -32,7 +31,6 @@
       <input type="tel" name="phone" required>
 
       <label>Select Service</label>
-      <!-- ✅ This is the only service_id field sent to backend -->
       <select name="service_id" id="serviceSelect" required>
         <option value="">-- Choose a Service --</option>
         <optgroup label="Periodic Services">
@@ -86,36 +84,32 @@
   </div>
 
 <script>
-// ✅ Auto-fill Service ID when service changes
+// Autofill service ID
 const serviceSelect = document.getElementById("serviceSelect");
 const serviceIdField = document.getElementById("serviceId");
 
-serviceSelect.addEventListener("change", function () {
-  serviceIdField.value = this.value || "";
+serviceSelect.addEventListener("change", () => {
+  serviceIdField.value = serviceSelect.value;
 });
 
-// ✅ Single clean submit handler (no double popups)
-document.getElementById("bookForm").addEventListener("submit", async function(e){
+// Submit to Node backend
+document.getElementById("bookForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
-  
-  const formData = new FormData(this);
-  formData.set("service_name", serviceSelect.options[serviceSelect.selectedIndex].text);
+  const formData = new FormData(e.target);
 
   try {
-    const res = await fetch("backend/book_service.php", { method:"POST", body: formData });
+    const res = await fetch("/api/bookings", { method:"POST", body:formData });
     const json = await res.json();
-    
+
     if(json.status === "success"){
       alert("✅ Booking Successful!");
-      this.reset();
+      e.target.reset();
       serviceIdField.value = "";
     } else {
-      alert("⚠️ Booking Failed: " + (json.message || "Try again"));
+      alert("⚠️ Booking Failed: " + json.message);
     }
-
-  } catch (err) {
-    alert("❌ Server Error! Check internet / backend");
-    console.log(err);
+  } catch(err) {
+    alert("❌ Cannot connect to server.");
   }
 });
 </script>

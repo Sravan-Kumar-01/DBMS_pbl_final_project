@@ -9,6 +9,8 @@
 </head>
 <body class="auth-body">
   <div class="auth-container">
+    
+    <!-- Login Box -->
     <div class="form-box" id="loginBox">
       <h2>Login</h2>
       <form id="loginForm">
@@ -19,6 +21,7 @@
       <p>Don't have an account? <a href="#" id="goSignup">Sign Up</a></p>
     </div>
 
+    <!-- Signup Box -->
     <div class="form-box hidden" id="signupBox">
       <h2>Sign Up</h2>
       <form id="signupForm">
@@ -30,28 +33,69 @@
       </form>
       <p>Already have an account? <a href="#" id="goLogin">Login</a></p>
     </div>
+
   </div>
-  <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const loginForm = document.getElementById("loginForm");
 
-    if (loginForm) {
-      loginForm.addEventListener("submit", function(e) {
-        e.preventDefault();
+<script>
+document.getElementById("goSignup").onclick = () => {
+  loginBox.classList.add("hidden");
+  signupBox.classList.remove("hidden");
+};
+document.getElementById("goLogin").onclick = () => {
+  signupBox.classList.add("hidden");
+  loginBox.classList.remove("hidden");
+};
 
-        const username = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value.trim();
+// ✅ LOGIN → Node backend
+document.getElementById("loginForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const user = loginUser.value.trim();
+  const pass = loginPass.value.trim();
 
-        if (username === "admin" && password === "1234") {
-          // ✅ Redirect to Admin Dashboard
-          window.location.href = "admin_dashboard.html";
-        } else {
-          alert("❌ Invalid username or password!");
-        }
-      });
-    }
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({ user, pass })
   });
+
+  const json = await res.json();
+
+  if(json.status === "success"){
+    localStorage.setItem("token", json.token);
+    if(json.role === "admin"){
+      window.location.href = "admin_dashboard.html";
+    } else {
+      window.location.href = "services.html";
+    }
+  } else {
+    alert("❌ " + json.message);
+  }
+});
+
+// ✅ SIGNUP → Node backend
+document.getElementById("signupForm").addEventListener("submit", async(e)=>{
+  e.preventDefault();
+  const res = await fetch("/api/auth/signup", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      name: signupName.value,
+      email: signupEmail.value,
+      phone: signupPhone.value,
+      password: signupPass.value
+    })
+  });
+
+  const json = await res.json();
+  if(json.status === "success"){
+    alert("✅ Signup Successful! Please Login.");
+    goLogin.click();
+  } else {
+    alert("⚠️ " + json.message);
+  }
+});
 </script>
+
 
 </body>
 </html>
